@@ -1,0 +1,8 @@
+{
+  "name": "Google DeepMind ~ Dasha",
+  "description": "A high-fidelity replication of the Google AI Studio iOS voice interface with fluid wave animations.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": []
+}
