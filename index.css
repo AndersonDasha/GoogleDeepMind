@@ -1,102 +1,48 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Outfit", sans-serif;
-  --font-preppy: "Playfair Display", serif;
-  
-  --color-gemini-blue: #1a73e8;
-  --color-gemini-purple: #a855f7;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+
+  --color-blush: #f7e4e1;
+  --color-rose: #d98e8a;
+  --color-rose-deep: #b56b67;
+  --color-sage: #8aa89a;
+  --color-sage-deep: #5f7d6f;
+  --color-cream: #fdf8f5;
+  --color-ink: #3a2e2c;
+  --color-amber-soft: #e8b06a;
 }
 
 @layer base {
+  html, body, #root {
+    height: 100%;
+  }
   body {
-    @apply bg-[#030712] text-white antialiased overflow-hidden select-none;
+    @apply text-[#3a2e2c] antialiased;
     font-family: var(--font-sans);
-    background: radial-gradient(circle at 50% 100%, #0c1a30 0%, #030712 100%);
+    background: linear-gradient(170deg, #fdf8f5 0%, #f7ece9 55%, #eef3ef 100%);
+    background-attachment: fixed;
   }
 
-  /* Custom Scrollbar */
-  ::-webkit-scrollbar {
-    width: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.2);
-  }
-  
-  /* For Firefox */
-  * {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
-  }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(58, 46, 44, 0.15); border-radius: 10px; }
+  * { scrollbar-width: thin; scrollbar-color: rgba(58,46,44,0.15) transparent; }
 }
 
-.gemini-pill-gradient {
-  background: linear-gradient(90deg, rgba(168, 85, 247, 0.12) 0%, rgba(59, 130, 246, 0.12) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+.card {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(58, 46, 44, 0.07);
+  box-shadow: 0 6px 24px -12px rgba(58, 46, 44, 0.18);
 }
 
-.gemini-gradient-border {
-  position: relative;
-  background: linear-gradient(#050a14, #050a14) padding-box,
-              linear-gradient(135deg, #a855f7 0%, #3b82f6 100%) border-box;
-  border: 1.5px solid transparent;
-}
+.font-display { font-family: var(--font-display); }
 
-.glass-pill-thick {
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(40px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+@keyframes float-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-
-.google-avatar-border {
-  position: relative;
-  padding: 1.5px;
-  background: conic-gradient(
-    from 180deg at 50% 50%,
-    #4285F4 0deg,
-    #FBBC05 90deg,
-    #34A853 180deg,
-    #EA4335 270deg,
-    #4285F4 360deg
-  );
-}
-
-.model-pill-gradient-border {
-  position: relative;
-  border-radius: 9999px;
-  background: linear-gradient(90deg, #a855f7, #3b82f6);
-  padding: 1px;
-}
-
-.glass-pill-thin {
-  background: rgba(0, 0, 0, 0.9);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-}
-
-.header-button-dark {
-  background: #111827;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.mic-active-gradient {
-  padding: 1.5px;
-  background: linear-gradient(135deg, #f472b6, #a855f7, #3b82f6);
-  border-radius: 9999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.mic-aura {
-  box-shadow: 0 0 30px rgba(59, 130, 246, 0.3), inset 0 0 15px rgba(255, 255, 255, 0.1);
-}
+.animate-float-up { animation: float-up 0.4s ease forwards; }
