@@ -60,6 +60,81 @@ Rules:
 Order text:
 `;
 
+/** An uploaded image, as a base64 payload + mime type. */
+export interface ImageInput {
+  base64: string; // without the data: prefix
+  mimeType: string;
+}
+
+/**
+ * Extract products from one or more uploaded screenshots/photos of orders,
+ * receipts, or product pages using Gemini's vision model.
+ */
+export async function parseProductsFromImages(images: ImageInput[]): Promise<ParsedProduct[]> {
+  if (!images.length) return [];
+  if (!ai) {
+    // No vision without an API key; surface a typed signal to the caller.
+    throw new NoVisionError();
+  }
+  try {
+    const parts = [
+      {
+        text:
+          PARSE_PROMPT.replace("Order text:", "") +
+          "\nThe images are screenshots or photos of beauty orders, receipts, or product pages. Read every visible product.",
+      },
+      ...images.map((img) => ({
+        inlineData: { mimeType: img.mimeType, data: img.base64 },
+      })),
+    ];
+    const res = await ai.models.generateContent({
+      model: MODEL,
+      contents: [{ role: "user", parts }],
+      config: { responseMimeType: "application/json", temperature: 0 },
+    });
+    const arr = parseJson<Array<{ name: string; brand?: string; category?: string }>>(
+      res.text ?? "",
+    );
+    return (arr ?? [])
+      .filter((p) => p && p.name && p.name.trim())
+      .map((p) => ({
+        id: nextId(),
+        name: p.name.trim(),
+        brand: (p.brand || "").trim() || undefined,
+        category: (p.category || "").trim() || undefined,
+      }));
+  } catch (err) {
+    if (err instanceof NoVisionError) throw err;
+    console.warn("Gemini vision parse failed:", err);
+    throw new Error("We couldn't read those images. Try clearer screenshots, or add items manually.");
+  }
+}
+
+/** Thrown when image parsing is requested without an API key. */
+export class NoVisionError extends Error {
+  constructor() {
+    super("Image analysis needs a Gemini API key. Set GEMINI_API_KEY, or use paste / manual entry.");
+    this.name = "NoVisionError";
+  }
+}
+
+/**
+ * Representative recent purchases for the "Connect Sephora" DEMO flow.
+ * Sephora has no public account API, so this stands in for a real sync.
+ */
+export function demoSephoraPurchases(): ParsedProduct[] {
+  return [
+    { name: "A-Passioni Retinol Cream", brand: "Drunk Elephant", category: "Treatment" },
+    { name: "Niacinamide 10% + Zinc 1%", brand: "The Ordinary", category: "Serum" },
+    { name: "Brazilian Crush Body Fragrance Mist", brand: "Sol de Janeiro", category: "Fragrance" },
+    { name: "Anthelios Mineral Sunscreen SPF 50", brand: "La Roche-Posay", category: "Sunscreen" },
+    { name: "2% BHA Liquid Exfoliant", brand: "Paula's Choice", category: "Exfoliant" },
+    { name: "Hydrating Facial Cleanser", brand: "CeraVe", category: "Cleanser" },
+    { name: "Lip Sleeping Mask", brand: "Laneige", category: "Lip" },
+    { name: "C E Ferulic Vitamin C Serum", brand: "SkinCeuticals", category: "Serum" },
+  ].map((p) => ({ id: nextId(), ...p }));
+}
+
 export async function parseProducts(rawText: string): Promise<ParsedProduct[]> {
   const trimmed = rawText.trim();
   if (!trimmed) return [];

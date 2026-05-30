@@ -2,92 +2,133 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  *
- * Bloom — a mobile-first web app that imports your Sephora purchase history
- * (pasted order emails), extracts each product, and flags which items are
- * commonly considered pregnancy-friendly vs. worth replacing during early
- * pregnancy, using a curated ingredient watchlist grounded into Gemini.
+ * Bloom — an editorial, mobile-first beauty app that imports your purchase
+ * history (Sephora connect / image upload / Gmail confirmations), then edits
+ * each product for early pregnancy: keep, check, or replace.
  */
 
-import { useState } from "react";
-import { AlertCircle } from "lucide-react";
-import AppHeader from "./components/AppHeader";
-import ImportScreen from "./components/ImportScreen";
-import ProductReview from "./components/ProductReview";
-import ResultsScreen from "./components/ResultsScreen";
-import { analyzeProducts, parseProducts } from "./lib/gemini";
+import { useMemo, useState } from "react";
+import AppBar from "./components/AppBar";
+import TabBar, { type Tab } from "./components/TabBar";
+import HomeScreen from "./screens/HomeScreen";
+import ImportHub, { type SourceLabel } from "./screens/ImportHub";
+import ReviewScreen from "./screens/ReviewScreen";
+import ResultsScreen from "./screens/ResultsScreen";
+import WishlistScreen from "./screens/WishlistScreen";
+import ProfileScreen from "./screens/ProfileScreen";
+import { analyzeProducts } from "./lib/gemini";
 import type { AnalyzedProduct, ParsedProduct } from "./lib/types";
 
-type Step = "import" | "review" | "results";
+type ImportStep = "hub" | "review" | "results";
 
 export default function App() {
-  const [step, setStep] = useState<Step>("import");
+  const [tab, setTab] = useState<Tab>("home");
+  const [step, setStep] = useState<ImportStep>("hub");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
   const [parsed, setParsed] = useState<ParsedProduct[]>([]);
+  const [source, setSource] = useState<SourceLabel | null>(null);
   const [analyzed, setAnalyzed] = useState<AnalyzedProduct[]>([]);
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
 
-  const reset = () => {
-    setStep("import");
-    setParsed([]);
-    setAnalyzed([]);
-    setError(null);
-  };
+  const wishlist = useMemo(
+    () => analyzed.filter((p) => savedIds.has(p.id)),
+    [analyzed, savedIds],
+  );
 
-  async function handleImport(text: string) {
-    setError(null);
-    setLoading(true);
-    try {
-      const products = await parseProducts(text);
-      if (!products.length) {
-        setError("We couldn't spot any products in that text. Try pasting more of the order, or add items manually.");
-        return;
-      }
-      setParsed(products);
-      setStep("review");
-    } catch {
-      setError("Something went wrong reading your products. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+  function toggleSave(id: string) {
+    setSavedIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function startImport() {
+    setStep("hub");
+    setTab("import");
+  }
+
+  async function handleParsed(products: ParsedProduct[], src: SourceLabel) {
+    setParsed(products);
+    setSource(src);
+    setStep("review");
   }
 
   async function handleAnalyze(products: ParsedProduct[]) {
-    setError(null);
     setLoading(true);
     try {
       const results = await analyzeProducts(products);
       setAnalyzed(results);
+      // Pre-save everything we recommend keeping.
+      setSavedIds(new Set(results.filter((r) => r.status === "keep").map((r) => r.id)));
       setStep("results");
-    } catch {
-      setError("Something went wrong during analysis. Please try again.");
     } finally {
       setLoading(false);
     }
   }
 
+  function resetAll() {
+    setParsed([]);
+    setSource(null);
+    setAnalyzed([]);
+    setSavedIds(new Set());
+    setStep("hub");
+    setTab("home");
+  }
+
+  // Within the Analyze tab, the back arrow steps the import flow back.
+  const back =
+    tab === "import" && step === "review"
+      ? () => setStep("hub")
+      : tab === "import" && step === "results"
+        ? () => setStep("hub")
+        : undefined;
+
   return (
-    <div className="mx-auto flex min-h-full max-w-md flex-col">
-      <AppHeader onReset={reset} showReset={step !== "import"} />
+    <div className="mx-auto flex min-h-full max-w-md flex-col bg-paper">
+      <AppBar onBack={back} onMenu={() => setTab("profile")} />
 
-      {error && (
-        <div className="mx-5 mb-3 flex items-start gap-2 rounded-2xl bg-rose/10 px-4 py-3 text-[13px] text-rose-deep">
-          <AlertCircle size={16} className="mt-0.5 shrink-0" />
-          <span>{error}</span>
-        </div>
-      )}
+      <main className="flex flex-1 flex-col pt-4">
+        {tab === "home" && (
+          <HomeScreen
+            onStart={startImport}
+            results={analyzed.length ? analyzed : null}
+            onViewResults={() => {
+              setStep("results");
+              setTab("import");
+            }}
+          />
+        )}
 
-      {step === "import" && <ImportScreen onImport={handleImport} loading={loading} />}
+        {tab === "import" && step === "hub" && <ImportHub onParsed={handleParsed} />}
+        {tab === "import" && step === "review" && (
+          <ReviewScreen
+            products={parsed}
+            source={source ?? "Gmail confirmations"}
+            loading={loading}
+            onConfirm={handleAnalyze}
+          />
+        )}
+        {tab === "import" && step === "results" && (
+          <ResultsScreen
+            products={analyzed}
+            savedIds={savedIds}
+            onToggleSave={toggleSave}
+            onRestart={() => setStep("hub")}
+          />
+        )}
 
-      {step === "review" && (
-        <ProductReview
-          products={parsed}
-          loading={loading}
-          onBack={() => setStep("import")}
-          onConfirm={handleAnalyze}
-        />
-      )}
+        {tab === "wishlist" && (
+          <WishlistScreen items={wishlist} onToggleSave={toggleSave} onStart={startImport} />
+        )}
 
-      {step === "results" && <ResultsScreen products={analyzed} />}
+        {tab === "profile" && (
+          <ProfileScreen source={source} analyzedCount={analyzed.length} onReset={resetAll} />
+        )}
+      </main>
+
+      <TabBar tab={tab} onChange={setTab} wishlistCount={wishlist.length} />
     </div>
   );
 }

@@ -4,12 +4,20 @@ Bloom is a mobile-first web app that imports your beauty purchase history,
 understands what you've bought, and flags which items are commonly considered
 **pregnancy-friendly** versus worth **replacing** during early pregnancy.
 
-You paste your Sephora order-confirmation emails (or any list of products);
-Bloom extracts each item and checks it against a curated watchlist of
-ingredients & traits that are frequently cautioned in pregnancy — retinoids,
-hydroquinone, strong fragrance/parfum, high-strength acid peels, phthalates,
-formaldehyde, oxybenzone sunscreen filters, and more — then sorts everything
-into **Keep / Check / Replace** with plain-language reasons and swap ideas.
+Bring in your purchase history three ways, then Bloom checks each item against a
+curated watchlist of ingredients & traits frequently cautioned in pregnancy —
+retinoids, hydroquinone, strong fragrance/parfum, high-strength acid peels,
+phthalates, formaldehyde, oxybenzone sunscreen filters, and more — and sorts
+everything into **Keep / Check / Replace** with plain-language reasons and swap
+ideas. The interface is fashion-editorial (Farfetch / Vogue), not medical.
+
+## Three ways to import
+
+| Method | Status | How it works |
+| --- | --- | --- |
+| **Connect Sephora** | Demo | Sephora has no public account API, so this loads a representative set of recent purchases to show the full flow end-to-end. |
+| **Upload screenshots** | Live (needs key) | Photos of order history, receipts, or product pages are read by Gemini's vision model. |
+| **Gmail confirmations** | Live | Forward or paste a Sephora order-confirmation email; Gemini extracts the products. Background Gmail sync would need OAuth credentials + a backend. |
 
 > ⚕️ **Not medical advice.** Bloom is an educational tool. Ingredient guidance
 > evolves and every pregnancy is different — always confirm with your doctor or
@@ -45,8 +53,9 @@ native app.
 
 | Path | Purpose |
 | --- | --- |
-| `App.tsx` | Three-step flow: import → review → results |
+| `App.tsx` | Tab navigation (Edit / Analyze / Wishlist / Profile) + import flow |
 | `lib/types.ts` | Shared types |
 | `lib/watchlist.ts` | Curated pregnancy-caution ingredient watchlist + matcher |
-| `lib/gemini.ts` | Gemini parse/analyze + offline heuristic fallback |
-| `components/` | UI: import, review, results, product cards, header, disclaimer |
+| `lib/gemini.ts` | Gemini text + vision parsing, analysis, Sephora demo data, offline fallback |
+| `screens/` | Home, ImportHub (3 methods), Review, Results, Wishlist, Profile |
+| `components/` | AppBar, TabBar, ProductCard, MonogramTile, Disclaimer |
