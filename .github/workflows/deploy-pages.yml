@@ -35,6 +35,19 @@ jobs:
 
       - run: touch dist/.nojekyll
 
+      # Diagnostic: records which commit was built and whether the key was
+      # present (boolean only — never the key itself). Also guarantees the
+      # output changes every run so the deploy never gets skipped.
+      - name: Write build info
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          HASKEY=false
+          if [ -n "$GEMINI_API_KEY" ]; then HASKEY=true; fi
+          printf '{"commit":"%s","hasKey":%s,"builtAt":"%s"}\n' \
+            "$GITHUB_SHA" "$HASKEY" "$(date -u +%FT%TZ)" > dist/build-info.json
+          cat dist/build-info.json
+
       - name: Publish to gh-pages
         uses: peaceiris/actions-gh-pages@v4
         with:
