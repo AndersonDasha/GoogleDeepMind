@@ -1,8 +1,6 @@
 {
-  "name": "Google DeepMind ~ Dasha",
-  "description": "A high-fidelity replication of the Google AI Studio iOS voice interface with fluid wave animations.",
-  "requestFramePermissions": [
-    "microphone"
-  ],
+  "name": "Bloom — Pregnancy-friendly beauty",
+  "description": "Paste your Sephora order emails and Bloom extracts each product, then flags which items are commonly considered pregnancy-friendly vs. worth replacing — checking for retinoids, strong fragrance, and other ingredients often cautioned in early pregnancy.",
+  "requestFramePermissions": [],
   "majorCapabilities": []
 }
