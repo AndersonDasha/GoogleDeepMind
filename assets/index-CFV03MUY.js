@@ -419,7 +419,7 @@ ${T}`)}return p}),zt=EN(jg);/**
  *
  * Gemini-powered parsing & pregnancy-safety analysis, with a fully offline
  * heuristic fallback so the app stays usable without an API key.
- */const ry=void 0,al=!!ry,tc="gemini-2.5-flash",to=al?new rM({apiKey:ry}):null;let fM=0;const Fa=()=>`p${Date.now().toString(36)}_${fM++}`;function nc(n){if(!n)return null;const t=n.replace(/```json/gi,"```").replace(/```/g,"").trim();try{return JSON.parse(t)}catch{const o=t.match(/(\[[\s\S]*\]|\{[\s\S]*\})/);if(o)try{return JSON.parse(o[0])}catch{return null}return null}}const uy=`You extract beauty/skincare products from pasted Sephora order
+ */const ry="",al=!!ry,tc="gemini-2.5-flash",to=al?new rM({apiKey:ry}):null;let fM=0;const Fa=()=>`p${Date.now().toString(36)}_${fM++}`;function nc(n){if(!n)return null;const t=n.replace(/```json/gi,"```").replace(/```/g,"").trim();try{return JSON.parse(t)}catch{const o=t.match(/(\[[\s\S]*\]|\{[\s\S]*\})/);if(o)try{return JSON.parse(o[0])}catch{return null}return null}}const uy=`You extract beauty/skincare products from pasted Sephora order
 confirmation emails or order text. Return ONLY a JSON array. Each element:
 {"name": string, "brand": string, "category": string}.
 
