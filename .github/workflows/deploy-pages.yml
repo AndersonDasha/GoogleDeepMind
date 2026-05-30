@@ -7,19 +7,13 @@ on:
       - main
   workflow_dispatch:
 
-# Allow this workflow to publish to GitHub Pages.
+# Pushing to the gh-pages branch only needs write access to repo contents —
+# it avoids the Pages REST API (which the default token can't bootstrap).
 permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-# One deploy at a time; newer pushes supersede in-flight ones.
-concurrency:
-  group: pages
-  cancel-in-progress: true
+  contents: write
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -39,21 +33,10 @@ jobs:
           # offline on-device watchlist mode.
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
-      # Enables Pages on the repo automatically (source = GitHub Actions).
-      - uses: actions/configure-pages@v5
-        with:
-          enablement: true
+      - run: touch dist/.nojekyll
 
-      - uses: actions/upload-pages-artifact@v3
+      - name: Publish to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: dist
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
